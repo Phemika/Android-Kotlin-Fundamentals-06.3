@@ -41,14 +41,17 @@ class SleepTrackerViewModel(
         formatNights(nights, application.resources)
     }
     private var tonight = MutableLiveData<SleepNight?>()
+
     init {
         initializeTonight()
     }
+
     private fun initializeTonight() {
         uiScope.launch {
             tonight.value = getTonightFromDatabase()
         }
     }
+
     private suspend fun getTonightFromDatabase(): SleepNight? {
         return withContext(Dispatchers.IO) {
             var night = database.getTonight()
@@ -58,6 +61,7 @@ class SleepTrackerViewModel(
             night
         }
     }
+
     fun onStartTracking() {
         uiScope.launch {
             val oldNight = tonight.value ?: return@launch
@@ -67,11 +71,13 @@ class SleepTrackerViewModel(
 
         }
     }
+
     private suspend fun update(night: SleepNight) {
         withContext(Dispatchers.IO) {
             database.insert(night)
         }
     }
+
     fun onClear() {
         uiScope.launch {
             clear()
@@ -88,14 +94,19 @@ class SleepTrackerViewModel(
     override fun onCleared() {
         super.onCleared()
         viewModelJob.cancel()
+        _showSnackbarEvent.value = true
+
     }
+
     private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
 
     val navigateToSleepQuality: LiveData<SleepNight>
         get() = _navigateToSleepQuality
+
     fun doneNavigating() {
         _navigateToSleepQuality.value = null
     }
+
     val startButtonVisible = Transformations.map(tonight) {
         it == null
     }
@@ -104,6 +115,14 @@ class SleepTrackerViewModel(
     }
     val clearButtonVisible = Transformations.map(nights) {
         it?.isNotEmpty()
+    }
+    private var _showSnackbarEvent = MutableLiveData<Boolean>()
+
+    val showSnackBarEvent: LiveData<Boolean>
+        get() = _showSnackbarEvent
+
+    fun doneShowingSnackbar() {
+        _showSnackbarEvent.value = false
     }
 }
 
