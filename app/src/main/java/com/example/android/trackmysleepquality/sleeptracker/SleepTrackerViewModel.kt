@@ -18,6 +18,7 @@ package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
 import android.provider.SyncStateContract.Helpers.insert
+import android.provider.SyncStateContract.Helpers.update
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
@@ -58,12 +59,12 @@ class SleepTrackerViewModel(
     }
     fun onStartTracking() {
         uiScope.launch {
-            val newNight = SleepNight()
-            insert(newNight)
-            tonight.value = getTonightFromDatabase()
+            val oldNight = tonight.value ?: return@launch
+            oldNight.endTimeMilli = System.currentTimeMillis()
+            update(oldNight)
         }
     }
-    private suspend fun insert(night: SleepNight) {
+    private suspend fun update(night: SleepNight) {
         withContext(Dispatchers.IO) {
             database.insert(night)
         }
